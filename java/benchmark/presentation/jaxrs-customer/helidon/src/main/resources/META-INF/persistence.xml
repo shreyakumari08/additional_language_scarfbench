@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="customer" transaction-type="JTA">
+        <jta-data-source>mydb</jta-data-source>
+        <class>helidon.tutorial.customer.data.Customer</class>
+        <class>helidon.tutorial.customer.data.Address</class>
+        <properties>
+            <property name="hibernate.hbm2ddl.auto" value="create"/>
+        </properties>
+    </persistence-unit>
+</persistence>

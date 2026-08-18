@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion>
+<parent><groupId>io.helidon.applications</groupId><artifactId>helidon-mp</artifactId><version>4.1.4</version></parent>
+<groupId>helidon.examples.tutorial</groupId><artifactId>helloservice</artifactId><version>0.0.1-SNAPSHOT</version>
+<properties>
+<mainClass>helidon.examples.tutorial.helloservice.Main</mainClass>
+<maven.compiler.source>17</maven.compiler.source><maven.compiler.target>17</maven.compiler.target>
+</properties>
+<dependencies>
+<dependency><groupId>io.helidon.microprofile.bundles</groupId><artifactId>helidon-microprofile-core</artifactId></dependency>
+</dependencies>
+<build><finalName>${project.artifactId}</finalName>
+<plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId>
+<executions><execution><id>copy-libs</id><phase>package</phase><goals><goal>copy-dependencies</goal></goals>
+<configuration><outputDirectory>${project.build.directory}/libs</outputDirectory><includeScope>runtime</includeScope></configuration>
+</execution></executions></plugin></plugins></build>
+</project>

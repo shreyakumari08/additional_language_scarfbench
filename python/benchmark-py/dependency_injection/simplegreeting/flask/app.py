@@ -1,0 +1,15 @@
+from flask import Flask, jsonify, request, Response
+
+app = Flask(__name__)
+
+@app.route("/simplegreeting", methods=["GET"])
+def handler():
+    return "<html><body><h1>Hello</h1><p>Greetings!</p></body></html>"
+
+
+@app.route("/", methods=["GET"])
+def root():
+    return "<html><body>Greetings!</body></html>"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)

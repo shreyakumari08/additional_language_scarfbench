@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="order" transaction-type="JTA">
+        <jta-data-source>mydb</jta-data-source>
+        <class>helidon.order.entity.Vendor</class>
+        <class>helidon.order.entity.VendorPart</class>
+        <class>helidon.order.entity.Part</class>
+        <class>helidon.order.entity.CustomerOrder</class>
+        <class>helidon.order.entity.LineItem</class>
+        <properties>
+            <property name="hibernate.hbm2ddl.auto" value="create"/>
+        </properties>
+    </persistence-unit>
+</persistence>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion>
+<groupId>vertx.examples.tutorial</groupId><artifactId>cart</artifactId><version>0.0.1-SNAPSHOT</version><packaging>jar</packaging>
+<properties>
+<maven.compiler.source>17</maven.compiler.source><maven.compiler.target>17</maven.compiler.target>
+<vertx.version>4.5.11</vertx.version>
+<main.verticle>vertx.examples.tutorial.cart.MainVerticle</main.verticle>
+</properties>
+<dependencyManagement><dependencies>
+<dependency><groupId>io.vertx</groupId><artifactId>vertx-stack-depchain</artifactId><version>${vertx.version}</version><type>pom</type><scope>import</scope></dependency>
+</dependencies></dependencyManagement>
+<dependencies>
+<dependency><groupId>io.vertx</groupId><artifactId>vertx-core</artifactId></dependency>
+<dependency><groupId>io.vertx</groupId><artifactId>vertx-web</artifactId></dependency>
+<dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId><version>1.5.19</version></dependency>
+</dependencies>
+<build><finalName>${project.artifactId}</finalName>
+<plugins><plugin><artifactId>maven-shade-plugin</artifactId><version>3.5.3</version>
+<executions><execution><phase>package</phase><goals><goal>shade</goal></goals>
+<configuration><createDependencyReducedPom>false</createDependencyReducedPom>
+<transformers>
+<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+<manifestEntries><Main-Class>io.vertx.core.Launcher</Main-Class><Main-Verticle>${main.verticle}</Main-Verticle></manifestEntries>
+</transformer>
+<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+</transformers>
+<filters><filter><artifact>*:*</artifact><excludes><exclude>META-INF/*.SF</exclude><exclude>META-INF/*.DSA</exclude><exclude>META-INF/*.RSA</exclude></excludes></filter></filters>
+</configuration></execution></executions></plugin></plugins></build>
+</project>

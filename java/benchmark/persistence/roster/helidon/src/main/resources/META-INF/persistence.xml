@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="roster" transaction-type="JTA">
+        <jta-data-source>mydb</jta-data-source>
+        <class>helidon.roster.entity.League</class>
+        <class>helidon.roster.entity.WinterLeague</class>
+        <class>helidon.roster.entity.SummerLeague</class>
+        <class>helidon.roster.entity.Team</class>
+        <class>helidon.roster.entity.Player</class>
+        <properties>
+            <property name="hibernate.hbm2ddl.auto" value="create"/>
+        </properties>
+    </persistence-unit>
+</persistence>

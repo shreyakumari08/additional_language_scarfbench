@@ -1,0 +1,69 @@
+# ---- OS / editor ---------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---- Secrets / credentials -----------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+token.json
+auth.json
+.bridge_secret
+
+# ---- Logs / temp / runtime ------------------------------------------------
+*.log
+tmp/
+.cache/
+
+# ---- Java / Maven ---------------------------------------------------------
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# ---- Python ---------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+htmlcov/
+
+# ---- Node / TypeScript ----------------------------------------------------
+node_modules/
+dist/
+build/
+out/
+.next/
+.nuxt/
+.turbo/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Rust -----------------------------------------------------------------
+# Keep top-level Cargo.lock; ignore per-crate build output only.
+**/target/
+
+# ---- ScarfBench runtime outputs ------------------------------------------
+generated-trajectory/**/run_*
+generated-trajectory/**/trajectory.json
+!generated-trajectory/.gitkeep
