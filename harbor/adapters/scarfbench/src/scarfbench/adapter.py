@@ -457,8 +457,13 @@ class ScarfBenchAdapter:
 
         env_dir = task_dir / "environment"
         self._copy_app(record["source_dir"], env_dir / "app", strip_harness=True)
-        self._copy_harness(record["target_dir"], env_dir / "verifier")
-        self._inject_smoke(record, env_dir / "verifier")
+        # Held-out grader is placed under tests/ (NOT environment/). Harbor uploads
+        # tests/ fresh at verify time, so the grader is never baked into the agent's
+        # writable image: the agent can neither read it during its run nor tamper
+        # with it to force a pass. tests/test.sh reads it from its own directory.
+        verifier_dir = task_dir / "tests" / "verifier"
+        self._copy_harness(record["target_dir"], verifier_dir)
+        self._inject_smoke(record, verifier_dir)
         self._copy_app(
             record["target_dir"],
             task_dir / "solution" / "reference",

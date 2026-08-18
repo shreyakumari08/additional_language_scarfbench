@@ -2,7 +2,9 @@
 set -Eeuo pipefail
 REWARD_PATH="/logs/verifier/reward.txt"
 APP_DIR="/workspace/app"
-HARNESS_DIR="/workspace/verifier"
+# Grader lives beside this script (tests/verifier), uploaded fresh by Harbor at
+# verify time -- NOT in the agent's image, so it cannot be read or tampered with.
+HARNESS_DIR="$(cd "$(dirname "$0")" && pwd)/verifier"
 APP_PORT=8080
 APP_PID=""
 : "${CARGO_TARGET_DIR:=$APP_DIR/target}"

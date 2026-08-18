@@ -70,6 +70,5 @@ RUN mkdir -p /root/.m2 && printf '%s\n' \
 # The gold answer is NOT here -- it lives under solution/ and is uploaded to
 # /solution ONLY for the oracle run, so the agent can never read it.
 COPY app/ /workspace/app/
-COPY verifier/ /workspace/verifier/
 
 CMD ["/bin/bash"]

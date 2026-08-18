@@ -8,7 +8,7 @@
 # a Docker daemon.
 #
 #   1. assemble build dir = agent app (/workspace/app) + held-out harness
-#      (/workspace/verifier: Dockerfile + test.sh + the real smoke.py grader);
+#      (tests/verifier: Dockerfile + test.sh + the real smoke.py grader);
 #   2. mvn package            -> "compile";
 #   3. free port + java -jar  -> "deploy" (wait for the app's ready log line);
 #   4. pytest smoke.py        -> "test" (the real ScarfBench grader).
@@ -22,7 +22,9 @@ set -Eeuo pipefail
 
 REWARD_PATH="/logs/verifier/reward.txt"
 APP_DIR="/workspace/app"
-HARNESS_DIR="/workspace/verifier"
+# Grader lives beside this script (tests/verifier), uploaded fresh by Harbor at
+# verify time -- NOT in the agent's image, so it cannot be read or tampered with.
+HARNESS_DIR="$(cd "$(dirname "$0")" && pwd)/verifier"
 BUILD_DIR="/tmp/scarf_build"
 APP_PORT=8080
 APP_PID=""
