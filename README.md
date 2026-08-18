@@ -125,3 +125,21 @@ the appropriate benchmark tree.
 See `harness/scarfbench-cli/LICENSE` for the harness CLI license. Individual
 benchmark applications are third-party open-source; their licenses live inside
 each app directory.
+
+
+## Harbor adapter (added)
+
+A **Harbor adapter** for ScarfBench is now included under
+[`harbor/adapters/scarfbench/`](./harbor/adapters/scarfbench/), alongside the
+original harness. It is additive — the original harness and language trees are
+unchanged, and **no ScarfBench task data is duplicated**.
+
+- **Original ScarfBench harness** → language trees + [`harness/`](./harness/) (`scarfbench-cli`).
+- **Same tasks through Harbor** → the adapter in
+  [`harbor/adapters/scarfbench/`](./harbor/adapters/scarfbench/), which reads the
+  existing benchmark trees (`java/benchmark/`, `python/benchmark-py/`,
+  `rust/benchmark-rs/`, `typescript/benchmark-ts/`) and generates Harbor tasks on
+  demand — the task data stays in the original harness and is not copied.
+
+A tasker can run the original harness, or run the same tasks through Harbor via
+the adapter. See [`harbor/README.md`](./harbor/README.md) to get started.
