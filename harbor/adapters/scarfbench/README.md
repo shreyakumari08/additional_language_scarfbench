@@ -12,17 +12,23 @@ each Harbor task is one `(app, source_framework -> target_framework)` migration.
 
 - **Task types**: full application ports across frameworks (build config,
   controllers/resources, persistence, DI, templates).
-- **Languages**: Java 21 (Maven).
+- **Languages**: multi-language. The adapter detects each app's language from
+  its framework and selects the matching toolchain, environment Dockerfile, and
+  native verifier:
+  - **Java 21** (Maven) — Spring, Quarkus, Jakarta EE, Micronaut, Helidon MP, Vert.x
+  - **Python 3.11** (pip) — Flask, FastAPI, Django
+  - **Rust** (Cargo) — Axum, Actix, Rocket
+  - **TypeScript** (Node/npm) — Express, Fastify, NestJS
 - **Provenance**: paper `arXiv:2605.06754`, code at
   <https://github.com/scarfbench/benchmark>. License: see upstream.
-- **Frameworks**: the three from the ScarfBench paper — **Spring**, **Quarkus**,
-  **Jakarta EE** — plus three added in this repo — **Micronaut**, **Helidon MP**,
-  **Vert.x** (6 total; all recognized by the `scarfbench-cli` harness too).
-- **Task count in this adapter**: the adapter generates one task per
-  `(app, source→target)` ordered framework pair present in each app —
-  `n*(n-1)` per app. With all 6 frameworks across 34 apps that is **1020**
-  tasks (the paper's Spring/Quarkus/Jakarta-only subset is **204**). No tasks
-  are vendored in this repo; generate them on demand (see below).
+- **Task count in this adapter**: one task per `(app, source→target)` ordered
+  framework pair present in each app (`n*(n-1)` per app), across all four
+  language benchmark trees. For the trees in this repo that is **1020** Java
+  (35 apps × 6 frameworks) + **204** each for Python / Rust / TypeScript (34
+  apps × 3 frameworks) = **~1632** generatable tasks. No task data is vendored
+  in this repo; generate on demand (see below). Point `--scarfbench-root` at the
+  language tree you want (`java/benchmark`, `python/benchmark-py`,
+  `rust/benchmark-rs`, or `typescript/benchmark-ts`).
 - **Main adaptations vs. the original harness**:
   - Native build/run inside the task container (`mvn package` + `java -jar`)
     rather than the original Docker-in-Docker `make test`. See *Notes &
@@ -70,7 +76,7 @@ scarfbench__<layer>__<app>__<from>__<to>/
 ├── task.toml                  # [task] identity, [metadata], [verifier], [agent], [environment]
 ├── instruction.md             # natural-language "migrate <app> from <from> to <to>"
 ├── environment/
-│   ├── Dockerfile             # JDK 21 + Maven + Python + Playwright/Chromium
+│   ├── Dockerfile             # per-language toolchain + Python (smoke grader)
 │   ├── app/                   # SOURCE app (agent workspace; harness withheld)
 │   └── verifier/              # held-out TARGET harness: Dockerfile + test.sh + smoke.py
 ├── solution/

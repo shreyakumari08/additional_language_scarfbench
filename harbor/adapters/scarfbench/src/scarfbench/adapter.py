@@ -36,19 +36,43 @@ logger = logging.getLogger(__name__)
 # lives under src/scarfbench/.
 TASK_TEMPLATE_DIR = Path(__file__).parent / "task-template"
 
-# Framework directory names recognized during task discovery. Includes the
-# three ScarfBench-paper frameworks (Spring / Quarkus / Jakarta EE) plus the
-# three added in this repo (Micronaut, Helidon MP, Vert.x). Every entry must
-# also be a valid `Framework` in the scarfbench-cli harness (validate/types.rs).
-FRAMEWORKS = (
-    "spring",
-    "quarkus",
-    "jakarta",
-    "jakartaee",
-    "micronaut",
-    "helidon",
-    "vertx",
-)
+# Framework directory name -> language. Discovery treats a directory as a
+# ScarfBench framework variant only if its name appears here. Covers the three
+# ScarfBench-paper Java frameworks (Spring / Quarkus / Jakarta EE), the three
+# added in this repo (Micronaut, Helidon MP, Vert.x), and the Python / Rust /
+# TypeScript framework families. Each Java entry must also be a valid
+# `Framework` in the scarfbench-cli harness (validate/types.rs).
+FRAMEWORK_LANGUAGES = {
+    # Java (Maven)
+    "spring": "java",
+    "quarkus": "java",
+    "jakarta": "java",
+    "jakartaee": "java",
+    "micronaut": "java",
+    "helidon": "java",
+    "vertx": "java",
+    # Python (pip)
+    "flask": "python",
+    "fastapi": "python",
+    "django": "python",
+    # Rust (Cargo)
+    "axum": "rust",
+    "actix": "rust",
+    "rocket": "rust",
+    # TypeScript (Node/npm)
+    "express": "typescript",
+    "fastify": "typescript",
+    "nestjs": "typescript",
+}
+FRAMEWORKS = tuple(FRAMEWORK_LANGUAGES)
+
+# Human-readable language names for instructions / metadata.
+LANGUAGE_TITLES = {
+    "java": "Java",
+    "python": "Python",
+    "rust": "Rust",
+    "typescript": "TypeScript",
+}
 
 # Files/dirs that make up ScarfBench's test harness. These are WITHHELD from
 # the agent's workspace (they encode how to build/deploy/test the app) and are
@@ -59,12 +83,39 @@ FRAMEWORKS = (
 #   * OPTIONAL_HARNESS is copied when present (older/newer benchmark variants
 #     ship a ``smoke/`` Playwright suite, a ``smoke.py`` grader, and/or a
 #     ``Makefile`` wrapper).
-REQUIRED_HARNESS = ("Dockerfile", "test.sh")
+# Only test.sh is required to recognize a framework variant: every ScarfBench
+# app ships one in each framework dir. (Java/Python dirs also ship a Dockerfile,
+# but Rust/TypeScript dirs do not -- their task image Dockerfile comes from this
+# adapter's per-language template instead.)
+REQUIRED_HARNESS = ("test.sh",)
 OPTIONAL_HARNESS = ("smoke", "smoke.py", "Makefile")
 HARNESS_NAMES = REQUIRED_HARNESS + OPTIONAL_HARNESS
 
 # Housekeeping entries that should never be copied into a generated task.
 SKIP_NAMES = (".git", ".agent_out", ".DS_Store", "metadata.json", "__pycache__")
+
+# Dependency / build directories that must never be copied into the agent
+# workspace or the reference solution. They are large and, worse, vendor
+# third-party files named like harness files (e.g. node_modules/**/Makefile),
+# which would otherwise trip assert_no_harness_leak. Skipped at the top level
+# and, via shutil.ignore_patterns, recursively inside copied subtrees.
+SKIP_DIRS = (
+    "node_modules",
+    "target",
+    "dist",
+    "build",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".next",
+    ".gradle",
+    ".git",
+    ".idea",
+    ".vscode",
+)
 
 
 class HarnessLeakError(RuntimeError):
@@ -153,7 +204,7 @@ class ScarfBenchAdapter:
             return
 
         apps: dict[Path, dict[str, Path]] = {}
-        for dockerfile in self.benchmark_root.rglob("Dockerfile"):
+        for dockerfile in self.benchmark_root.rglob("test.sh"):
             fw_dir = dockerfile.parent
             if not self._is_framework_dir(fw_dir):
                 continue
@@ -192,7 +243,11 @@ class ScarfBenchAdapter:
     # ------------------------------------------------------------------ #
     def _infer_difficulty(self, source_dir: Path) -> str:
         try:
-            n = sum(1 for _ in source_dir.rglob("*.java"))
+            n = sum(
+                1
+                for pat in ("*.java", "*.py", "*.rs", "*.ts")
+                for _ in source_dir.rglob(pat)
+            )
         except OSError:
             n = 0
         if n <= 15:
@@ -208,14 +263,15 @@ class ScarfBenchAdapter:
         ``smoke/``, ``smoke.py``, and ``Makefile``.
         """
         dst_dir.mkdir(parents=True, exist_ok=True)
+        ignore = shutil.ignore_patterns(*SKIP_DIRS, ".DS_Store", "*.pyc")
         for item in src_dir.iterdir():
-            if item.name in SKIP_NAMES:
+            if item.name in SKIP_NAMES or item.name in SKIP_DIRS:
                 continue
             if strip_harness and item.name in HARNESS_NAMES:
                 continue
             dst = dst_dir / item.name
             if item.is_dir():
-                shutil.copytree(item, dst, dirs_exist_ok=True)
+                shutil.copytree(item, dst, dirs_exist_ok=True, ignore=ignore)
             else:
                 shutil.copy2(item, dst)
 
@@ -236,11 +292,33 @@ class ScarfBenchAdapter:
             else:
                 shutil.copy2(src, dst)
 
-    def _copy_task_template(self, output_dir: Path) -> None:
-        """Copy the task-template scaffold into the generated task directory."""
+    def _copy_task_template(self, output_dir: Path, language: str) -> None:
+        """Copy the task-template scaffold into the generated task directory.
+
+        Shared files (task.toml, instruction.md, solution/) are copied for every
+        task; the language-specific environment/Dockerfile and tests/test.sh come
+        from task-template/lang/<language>/.
+        """
         if not TASK_TEMPLATE_DIR.exists():
             raise FileNotFoundError(f"task-template not found at {TASK_TEMPLATE_DIR}")
+        lang_dir = TASK_TEMPLATE_DIR / "lang" / language
+        if not lang_dir.exists():
+            raise FileNotFoundError(
+                f"no task template for language {language!r} at {lang_dir}"
+            )
+
+        # Shared scaffold: every top-level item except the per-language `lang/`.
         for item in TASK_TEMPLATE_DIR.iterdir():
+            if item.name == "lang":
+                continue
+            dst = output_dir / item.name
+            if item.is_dir():
+                shutil.copytree(item, dst, dirs_exist_ok=True)
+            else:
+                shutil.copy2(item, dst)
+
+        # Language-specific environment/ + tests/ (Dockerfile + test.sh).
+        for item in lang_dir.iterdir():
             dst = output_dir / item.name
             if item.is_dir():
                 shutil.copytree(item, dst, dirs_exist_ok=True)
@@ -258,6 +336,7 @@ class ScarfBenchAdapter:
         app = record["app"]
         src = record["src"]
         dst = record["dst"]
+        language = FRAMEWORK_LANGUAGES.get(src, "java")
         source_id = record["id"]
         difficulty = self._infer_difficulty(record["source_dir"])
         local_task_id = self.make_local_task_id(source_id)
@@ -269,6 +348,8 @@ class ScarfBenchAdapter:
             "{{TO}}": dst,
             "{{FROM_TITLE}}": src.capitalize(),
             "{{TO_TITLE}}": dst.capitalize(),
+            "{{LANGUAGE}}": language,
+            "{{LANGUAGE_TITLE}}": LANGUAGE_TITLES.get(language, language.capitalize()),
             "{{LAYER}}": record["layer"],
             "{{DIFFICULTY}}": difficulty,
             "{{TASK_ID}}": source_id,
@@ -366,8 +447,9 @@ class ScarfBenchAdapter:
                 return task_dir
             shutil.rmtree(task_dir)
 
+        language = FRAMEWORK_LANGUAGES.get(record["src"], "java")
         task_dir.mkdir(parents=True, exist_ok=True)
-        self._copy_task_template(task_dir)
+        self._copy_task_template(task_dir, language)
 
         env_dir = task_dir / "environment"
         self._copy_app(record["source_dir"], env_dir / "app", strip_harness=True)

@@ -1,6 +1,6 @@
 ## ScarfBench Migration Task: {{SOURCE_ID}}
 
-You are an expert enterprise-Java engineer. You are given the **{{APP}}**
+You are an expert {{LANGUAGE_TITLE}} engineer. You are given the **{{APP}}**
 application implemented with the **{{FROM_TITLE}}** framework. Your job is to
 **migrate it to {{TO_TITLE}}** so that it compiles, deploys, and passes the
 application's smoke tests — while preserving the original behaviour and HTTP
@@ -17,7 +17,8 @@ that it becomes a working **{{TO_TITLE}}** application.
 
 ### What to Do
 
-1. Convert the build configuration (e.g. `pom.xml` / `build.gradle`) to the
+1. Convert the build / dependency configuration (the project's manifest — e.g.
+   `pom.xml`, `package.json`, `Cargo.toml`, or `requirements.txt`) to the
    equivalent for **{{TO_TITLE}}**.
 2. Port the application code — controllers/resources, persistence, configuration,
    dependency injection, and templates/static assets — to **{{TO_TITLE}}** idioms.
