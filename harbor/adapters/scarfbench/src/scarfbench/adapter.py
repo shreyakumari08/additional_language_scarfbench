@@ -89,7 +89,11 @@ LANGUAGE_TITLES = {
 # adapter's per-language template instead.)
 REQUIRED_HARNESS = ("test.sh",)
 OPTIONAL_HARNESS = ("smoke", "smoke.py", "Makefile")
-HARNESS_NAMES = REQUIRED_HARNESS + OPTIONAL_HARNESS
+# Files that make up the grading harness: stripped from the agent workspace and
+# (when present) injected into the verifier instead. Dockerfile is withheld even
+# though it is no longer a discovery marker (Rust/TS dirs ship none), so a source
+# app's Dockerfile never leaks into environment/app/.
+HARNESS_NAMES = ("Dockerfile",) + REQUIRED_HARNESS + OPTIONAL_HARNESS
 
 # Housekeeping entries that should never be copied into a generated task.
 SKIP_NAMES = (".git", ".agent_out", ".DS_Store", "metadata.json", "__pycache__")

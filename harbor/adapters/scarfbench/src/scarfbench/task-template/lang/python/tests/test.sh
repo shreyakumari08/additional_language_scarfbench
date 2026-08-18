@@ -79,11 +79,21 @@ if [ -f "$HARNESS_DIR/smoke.py" ]; then
     echo "[INFO] smoke: $PASSED/$TOTAL passed -> reward $REWARD"
     write_reward "$REWARD"
 else
-    # Fallback: use app's own test.sh
-    if [ -f "$APP_DIR/test.sh" ]; then
-        bash "$APP_DIR/test.sh"
-        write_reward "1.0000"
+    # Fallback: run the held-out target grader (verifier/test.sh) against the
+    # running app. Reward is 1.0 only if the grader itself exits 0 -- never
+    # write 1.0 unconditionally. (The agent's own test.sh is withheld, so we use
+    # the verifier copy, not $APP_DIR/test.sh.)
+    GRADER="$HARNESS_DIR/test.sh"
+    if [ -f "$GRADER" ]; then
+        echo "[INFO] Running held-out grader: $GRADER"
+        if PORT="$APP_PORT" bash "$GRADER"; then
+            echo "[INFO] grader passed -> reward 1.0000"
+            write_reward "1.0000"
+        else
+            echo "[INFO] grader failed -> reward 0.0000"
+            write_reward "0.0000"
+        fi
     else
-        write_reward "0.0000"
+        fail_zero "no grader found (neither smoke.py nor verifier/test.sh)"
     fi
 fi
