@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Rust behavioral test for mood
-set -euo pipefail
-PORT="8080"
+# Behavioral oracle: presentation/mood
+# Renders an HTML view exposing the mood state.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/report"); printf '%s' "$RESP" | grep -qi 'mood' || { echo "FAIL html /report: $RESP"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/"); printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL text /: $RESP"; exit 1; }
+assert_status        GET /report 200
+assert_header        GET /report 'Content-Type' 'text/html'
+assert_body_contains GET /report '<h1>'
+assert_body_contains GET /report 'mood'
+assert_body_contains GET /report 'awake'
+assert_status        GET / 200
 
-echo PASS
+oracle_summary

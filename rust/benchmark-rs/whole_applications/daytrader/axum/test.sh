@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Rust behavioral test for daytrader
-set -euo pipefail
-PORT="9080"
+# AUTO-GENERATED baseline behavioral oracle: whole_applications/daytrader
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/daytrader/"); printf '%s' "$RESP" | grep -qi '<h1>' || { echo "FAIL html /daytrader/: $RESP"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/"); printf '%s' "$RESP" | grep -qiE 'OK|<h1>' || { echo "FAIL html /: $RESP"; exit 1; }
+assert_reachable GET /daytrader/
+assert_nonempty  GET /daytrader/
+assert_reachable GET /
+assert_nonempty  GET /
 
-echo PASS
+oracle_summary

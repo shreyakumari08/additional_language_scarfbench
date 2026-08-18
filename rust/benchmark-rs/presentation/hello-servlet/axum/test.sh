@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Rust behavioral test for hello-servlet
-set -euo pipefail
-PORT="8080"
+# Behavioral oracle: presentation/hello-servlet
+# Parameterized greeting: the request parameter must flow through to the
+# rendered response, and the default must be "World".
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/greeting?name=Duke"); printf '%s' "$RESP" | grep -qi 'Hello.*Duke' || { echo "FAIL greeting: $RESP"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/greeting"); printf '%s' "$RESP" | grep -qi 'Hello.*World' || { echo "FAIL greeting default: $RESP"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/"); printf '%s' "$RESP" | grep -qE 'Hello, World|<html' || { echo "FAIL text /: $RESP"; exit 1; }
+assert_status        GET /greeting 200
+assert_body_contains GET /greeting 'Hello'
+assert_body_contains GET /greeting 'World'                 # default name
+assert_body_contains GET '/greeting?name=Duke' 'Hello'
+assert_body_contains GET '/greeting?name=Duke' 'Duke'      # parameter honored
 
-echo PASS
+oracle_summary

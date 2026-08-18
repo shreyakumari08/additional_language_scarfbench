@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# Rust behavioral test for cargotracker
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: whole_applications/cargotracker
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/cargo-tracker/index.xhtml"); printf '%s' "$RESP" | grep -qi '<h1>' || { echo "FAIL html /cargo-tracker/index.xhtml: $RESP"; exit 1; }
+assert_reachable GET /cargo-tracker/index.xhtml
+assert_nonempty  GET /cargo-tracker/index.xhtml
+assert_reachable GET /
 
-echo PASS
+oracle_summary

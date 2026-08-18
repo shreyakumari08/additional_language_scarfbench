@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
-# Behavioral test for standalone — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: business_domain/standalone
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# json-/standalone
-STATUS=$(curl -sL -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/standalone")
-[ "$STATUS" = "200" ] || { echo "FAIL_status_$STATUS (/standalone)"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/standalone")
-printf '%s' "$RESP" | grep -q '"message"' || { echo "FAIL: /standalone missing message: $RESP"; exit 1; }
-printf '%s' "$RESP" | grep -q 'Greetings!' || { echo "FAIL: /standalone missing Greetings: $RESP"; exit 1; }
-# json-/
-STATUS=$(curl -sL -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/")
-[ "$STATUS" = "200" ] || { echo "FAIL_status_$STATUS (/)"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -q '"message"' || { echo "FAIL: / missing message: $RESP"; exit 1; }
-printf '%s' "$RESP" | grep -q 'Greetings!' || { echo "FAIL: / missing Greetings: $RESP"; exit 1; }
+assert_reachable GET /standalone
+assert_nonempty  GET /standalone
+assert_reachable GET /
+assert_nonempty  GET /
 
-echo PASS
+oracle_summary

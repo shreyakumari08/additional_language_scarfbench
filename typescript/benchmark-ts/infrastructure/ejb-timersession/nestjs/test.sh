@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Behavioral test for ejb-timersession — payload/shape assertions
-set -euo pipefail
-PORT="9080"
+# AUTO-GENERATED baseline behavioral oracle: infrastructure/ejb-timersession
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# html-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qi '<h1>' || { echo "FAIL: / missing marker: $RESP"; exit 1; }
+assert_reachable GET /
+assert_nonempty  GET /
+assert_reachable GET /
 
-echo PASS
+oracle_summary

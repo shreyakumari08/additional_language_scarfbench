@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
-# Behavioral test for counter — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# Behavioral oracle: business_domain/counter
+# Verifies stateful behavior — the counter must report a plain-text access count
+# that strictly increases on each request (application-scoped state), which is
+# the observable contract the migration must preserve.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# counter
-STATUS=$(curl -sL -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/counter")
-[ "$STATUS" = "200" ] || { echo "FAIL_status_$STATUS"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/counter")
-printf '%s' "$RESP" | grep -qE 'accessed [0-9]+ time' || { echo "FAIL_body: $RESP"; exit 1; }
-V1=$(curl -sL "http://localhost:${PORT}/counter" | grep -oE '[0-9]+')
-V2=$(curl -sL "http://localhost:${PORT}/counter" | grep -oE '[0-9]+')
-[ "$V2" -gt "$V1" ] || { echo "FAIL_counter no_increment $V1->$V2"; exit 1; }
-# text-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL: / missing text: $RESP"; exit 1; }
+assert_status GET / 200
+assert_status GET /counter 200
+assert_header GET /counter 'Content-Type' 'text/plain'
+assert_body_matches GET /counter 'accessed[[:space:]]+[0-9]+[[:space:]]+time'
 
-echo PASS
+# --- stateful check: successive reads must strictly increase the count --------
+n1=$(http_body GET /counter | grep -oE '[0-9]+' | head -1)
+n2=$(http_body GET /counter | grep -oE '[0-9]+' | head -1)
+if [ -n "$n1" ] && [ -n "$n2" ] && [ "$n2" -gt "$n1" ]; then
+  oracle_pass "counter increments across requests ($n1 -> $n2)"
+else
+  oracle_fail "counter did not increment (got '$n1' then '$n2')"
+fi
+
+oracle_summary

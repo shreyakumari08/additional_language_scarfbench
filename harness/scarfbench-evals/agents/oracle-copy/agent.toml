@@ -1,0 +1,4 @@
+solution_name = "oracle-copy"
+model         = "none-deterministic"
+description   = "Deterministic oracle: replaces the workspace with the gold target-framework reference shipped by ScarfBench. Used to prove a task is solvable (reward should be 1.0). Not a real coding agent."
+entrypoint    = "run.sh"

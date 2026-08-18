@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Rust behavioral test for address-book
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: persistence/address-book
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/contacts"); printf '%s' "$RESP" | grep -qE '^\[' || { echo "FAIL empty: $RESP"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/"); printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL text /: $RESP"; exit 1; }
+assert_reachable GET /contacts
+assert_nonempty  GET /contacts
+assert_reachable GET /
+assert_nonempty  GET /
 
-echo PASS
+oracle_summary

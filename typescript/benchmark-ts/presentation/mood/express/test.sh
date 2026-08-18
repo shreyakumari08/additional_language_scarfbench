@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Behavioral test for mood — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# Behavioral oracle: presentation/mood
+# Renders an HTML view exposing the mood state.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# html-/report
-RESP=$(curl -sL "http://localhost:${PORT}/report")
-printf '%s' "$RESP" | grep -qi '<h1>' || { echo "FAIL: /report missing marker: $RESP"; exit 1; }
-# text-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL: / missing text: $RESP"; exit 1; }
+assert_status        GET /report 200
+assert_header        GET /report 'Content-Type' 'text/html'
+assert_body_contains GET /report '<h1>'
+assert_body_contains GET /report 'mood'
+assert_body_contains GET /report 'awake'
+assert_status        GET / 200
 
-echo PASS
+oracle_summary

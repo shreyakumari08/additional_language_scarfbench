@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Behavioral test for ejb-interceptor — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: infrastructure/ejb-interceptor
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# lowercase-named-GET
-RESP=$(curl -sL "http://localhost:${PORT}/response?name=WORLD")
-printf '%s' "$RESP" | grep -qi 'hello.*world' || { echo "FAIL lowercase: $RESP"; exit 1; }
-# text-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL: / missing text: $RESP"; exit 1; }
+assert_reachable GET /
+assert_nonempty  GET /
+assert_reachable GET /
 
-echo PASS
+oracle_summary

@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Rust behavioral test for cart
-set -euo pipefail
-PORT="8080"
+# Behavioral oracle: business_domain/cart
+# Session-scoped cart view: renders an HTML form; root is a liveness endpoint.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/cart"); printf '%s' "$RESP" | grep -qi 'form' || { echo "FAIL form: $RESP"; exit 1; }; printf '%s' "$RESP" | grep -qi 'input' || { echo "FAIL input: $RESP"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/"); printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL text /: $RESP"; exit 1; }
+assert_status        GET /cart 200
+assert_header        GET /cart 'Content-Type' 'text/html'
+assert_body_contains GET /cart '<form'
+assert_body_contains GET /cart '<input'
+assert_status        GET / 200
+assert_body_matches  GET / 'OK|<html'
 
-echo PASS
+oracle_summary

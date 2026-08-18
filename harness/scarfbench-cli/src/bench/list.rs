@@ -1,8 +1,35 @@
+use crate::validate::types::Framework;
 use anyhow::Result;
 use clap::Args;
 use comfy_table::Table;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
+
+/// Files whose presence marks a directory as a runnable framework variant.
+///
+/// The original ScarfBench keyed listing off `Makefile`, but the extension
+/// tasks (Python/TypeScript/Rust and the new Java frameworks) are packaged with
+/// language-native build descriptors and a containerized oracle instead. We
+/// treat any of these markers as evidence of a variant so that no framework is
+/// silently omitted from `list`.
+const VARIANT_MARKERS: &[&str] = &[
+    "Makefile",
+    "makefile",
+    "Dockerfile",
+    "test.sh",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "package.json",
+    "Cargo.toml",
+    "requirements.txt",
+    "pyproject.toml",
+];
+
+/// True if `dir` directly contains any recognized build/oracle marker.
+fn is_variant_dir(dir: &Path) -> bool {
+    VARIANT_MARKERS.iter().any(|m| dir.join(m).is_file())
+}
 
 #[derive(Args, Debug)]
 pub struct BenchListArgs {
@@ -53,51 +80,70 @@ pub fn run(args: BenchListArgs) -> Result<i32> {
     Ok(0)
 }
 
-/// Generate a header for the table
-fn gen_header() -> [String; 4] {
+/// Generate a header for the table.
+///
+/// A `Language` column is added between `Framework` and `Path` to surface the
+/// language dimension of the extended benchmark. It is derived from the
+/// framework name and shows `-` for directories whose framework we don't
+/// recognize (so unknown variants are visible, not hidden).
+fn gen_header() -> [String; 5] {
     [
         "Layer".to_string(),
         "Application".to_string(),
         "Framework".to_string(),
+        "Language".to_string(),
         "Path".to_string(),
     ]
 }
 
-/// Generate the table rows
+/// Generate the table rows.
+///
+/// A directory is listed as a variant when its relative path under the
+/// benchmark root is exactly `layer/app/framework` and it contains a build or
+/// oracle marker (see [`VARIANT_MARKERS`]). We iterate directories (not marker
+/// files) so a variant is listed once regardless of how many markers it has.
 fn gen_rows(
     base: &PathBuf,
     bench_root: &PathBuf,
-) -> Result<Vec<[String; 4]>, anyhow::Error> {
-    let mut rows: Vec<[String; 4]> = Vec::new();
+) -> Result<Vec<[String; 5]>, anyhow::Error> {
+    let mut rows: Vec<[String; 5]> = Vec::new();
 
-    for entry in WalkDir::new(base) {
+    for entry in WalkDir::new(base).min_depth(1) {
         let entry = entry?;
-
-        if entry.file_name() == "Makefile" {
-            let Some(leaf) = entry.path().parent() else {
-                continue;
-            };
-            // Find the relative path to the layer directory
-            let rel = leaf.strip_prefix(bench_root)?;
-            let parts: Vec<String> =
-                rel.iter().map(|p| p.to_string_lossy().into_owned()).collect();
-
-            if parts.len() != 3 {
-                continue;
-            }
-
-            rows.push([
-                parts[0].clone(),
-                parts[1].clone(),
-                parts[2].clone(),
-                leaf.to_string_lossy().into_owned(),
-            ]);
+        if !entry.file_type().is_dir() {
+            continue;
         }
+        let leaf = entry.path();
+
+        // Only consider directories at the layer/app/framework depth.
+        let rel = leaf.strip_prefix(bench_root)?;
+        let parts: Vec<String> =
+            rel.iter().map(|p| p.to_string_lossy().into_owned()).collect();
+        if parts.len() != 3 {
+            continue;
+        }
+
+        // Must actually be a runnable variant (build/oracle marker present).
+        if !is_variant_dir(leaf) {
+            continue;
+        }
+
+        let language = Framework::parse(&parts[2])
+            .map(|f| f.language().to_string())
+            .unwrap_or_else(|| "-".to_string());
+
+        rows.push([
+            parts[0].clone(),
+            parts[1].clone(),
+            parts[2].clone(),
+            language,
+            leaf.to_string_lossy().into_owned(),
+        ]);
     }
     Ok(rows)
 }
 
-fn tabulate(header: &[String; 4], rows: &[[String; 4]]) -> Table {
+fn tabulate(header: &[String; 5], rows: &[[String; 5]]) -> Table {
     let mut table = Table::new();
     table.load_preset(comfy_table::presets::UTF8_FULL_CONDENSED);
     // Set header of the able
@@ -131,9 +177,42 @@ mod tests {
                 "Layer".to_string(),
                 "Application".to_string(),
                 "Framework".to_string(),
+                "Language".to_string(),
                 "Path".to_string(),
             ]
         );
+    }
+
+    /// A recognized framework directory should be listed with its language,
+    /// even when the only marker present is a Dockerfile (no Makefile) — this
+    /// is the case for the Python/TypeScript/Rust extension tasks.
+    #[test]
+    fn test_recognizes_non_makefile_variant_and_language() -> Result<()> {
+        let tmpdir = tempfile::tempdir().unwrap();
+        let bench_root = tmpdir.path().join("benchmark");
+        let variant = bench_root.join("business_domain/cart/axum");
+        fs::create_dir_all(&variant)?;
+        fs::write(variant.join("Dockerfile"), "FROM scratch\n")?;
+
+        let rows = gen_rows(&bench_root, &bench_root).expect("gen_rows failed");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0][0], "business_domain");
+        assert_eq!(rows[0][1], "cart");
+        assert_eq!(rows[0][2], "axum");
+        assert_eq!(rows[0][3], "rust"); // language derived from framework
+        Ok(())
+    }
+
+    /// A directory at the right depth but with no build/oracle marker must not
+    /// be listed (avoids listing stray directories as variants).
+    #[test]
+    fn test_ignores_marker_less_dir() -> Result<()> {
+        let tmpdir = tempfile::tempdir().unwrap();
+        let bench_root = tmpdir.path().join("benchmark");
+        fs::create_dir_all(bench_root.join("business_domain/cart/notes"))?;
+        let rows = gen_rows(&bench_root, &bench_root).expect("gen_rows failed");
+        assert!(rows.is_empty());
+        Ok(())
     }
 
     /// Test generate rows for the table
@@ -174,8 +253,9 @@ mod tests {
         assert_eq!(rows[0][0], "layer");
         assert_eq!(rows[0][1], "app");
         assert_eq!(rows[0][2], "framework");
+        assert_eq!(rows[0][3], "-"); // unrecognized framework -> language "-"
         assert_eq!(
-            rows[0][3],
+            rows[0][4],
             bench_root
                 .join("layer/app/framework")
                 .to_string_lossy()
@@ -203,8 +283,9 @@ mod tests {
         assert_eq!(rows[0][0], "layer1");
         assert_eq!(rows[0][1], "app1");
         assert_eq!(rows[0][2], "framework");
+        assert_eq!(rows[0][3], "-");
         assert_eq!(
-            rows[0][3],
+            rows[0][4],
             bench_root
                 .join("layer1/app1/framework")
                 .to_string_lossy()

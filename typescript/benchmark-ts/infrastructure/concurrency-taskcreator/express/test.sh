@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Behavioral test for concurrency-taskcreator — payload/shape assertions
-set -euo pipefail
-PORT="9080"
+# Behavioral oracle: infrastructure/concurrency-taskcreator
+# Exercises the managed-executor task-creation infrastructure; the view must
+# render successfully (the concurrency work completed without error).
+# NOTE: this app binds :9080 — the runner injects BASE_URL with the right port.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# html-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qi '<h1>' || { echo "FAIL: / missing marker: $RESP"; exit 1; }
+assert_status        GET / 200
+assert_header        GET / 'Content-Type' 'text/html'
+assert_body_contains GET / '<h1>'
+assert_body_contains GET / 'Task Creator'
 
-echo PASS
+oracle_summary

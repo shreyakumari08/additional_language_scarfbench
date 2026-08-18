@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# Behavioral test for converter — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# Behavioral oracle: business_domain/converter
+# Presents an HTML form for the currency converter interaction.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# form-html
-RESP=$(curl -sL "http://localhost:${PORT}/converter")
-printf '%s' "$RESP" | grep -qi 'form' || { echo "FAIL form: $RESP"; exit 1; }
-printf '%s' "$RESP" | grep -qi 'input' || { echo "FAIL input: $RESP"; exit 1; }
-# text-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL: / missing text: $RESP"; exit 1; }
+assert_status        GET /converter 200
+assert_header        GET /converter 'Content-Type' 'text/html'
+assert_body_contains GET /converter '<form'
+assert_body_contains GET /converter '<input'
+assert_status        GET / 200
 
-echo PASS
+oracle_summary

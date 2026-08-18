@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Rust behavioral test for standalone
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: business_domain/standalone
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/standalone"); printf '%s' "$RESP" | grep -q '"message"' || { echo "FAIL json msg: $RESP"; exit 1; }; printf '%s' "$RESP" | grep -q 'Greetings!' || { echo "FAIL json Greetings: $RESP"; exit 1; }
-RESP=$(curl -sL "http://localhost:${PORT}/"); printf '%s' "$RESP" | grep -q '"message"' || { echo "FAIL json msg: $RESP"; exit 1; }; printf '%s' "$RESP" | grep -q 'Greetings!' || { echo "FAIL json Greetings: $RESP"; exit 1; }
+assert_reachable GET /standalone
+assert_nonempty  GET /standalone
+assert_reachable GET /
+assert_nonempty  GET /
 
-echo PASS
+oracle_summary

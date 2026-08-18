@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Behavioral test for helloservice — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: business_domain/helloservice
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# html-/helloservice
-RESP=$(curl -sL "http://localhost:${PORT}/helloservice")
-printf '%s' "$RESP" | grep -qi 'Greetings' || { echo "FAIL: /helloservice missing marker: $RESP"; exit 1; }
-# html-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qi 'Greetings' || { echo "FAIL: / missing marker: $RESP"; exit 1; }
+assert_reachable GET /helloservice
+assert_nonempty  GET /helloservice
+assert_reachable GET /
+assert_nonempty  GET /
 
-echo PASS
+oracle_summary

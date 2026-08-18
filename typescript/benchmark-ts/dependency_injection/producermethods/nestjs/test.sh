@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
-# Behavioral test for producermethods — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: dependency_injection/producermethods
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# cipher-GET-/producermethods
-RESP=$(curl -sL "http://localhost:${PORT}/producermethods?inputString=hello")
-printf '%s' "$RESP" | grep -q 'Coded: ifmmp' || { echo "FAIL cipher-GET: $RESP"; exit 1; }
-# cipher-POST-/producermethods
-RESP=$(curl -sL -X POST -d "inputString=hello" "http://localhost:${PORT}/producermethods")
-printf '%s' "$RESP" | grep -q 'Coded: ifmmp' || { echo "FAIL cipher-POST: $RESP"; exit 1; }
-# text-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qE 'OK|<html' || { echo "FAIL: / missing text: $RESP"; exit 1; }
+assert_reachable GET /
+assert_nonempty  GET /
+assert_reachable GET /
 
-echo PASS
+oracle_summary

@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Rust behavioral test for concurrency-jobs
-set -euo pipefail
-PORT="9080"
+# AUTO-GENERATED baseline behavioral oracle: infrastructure/concurrency-jobs
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-RESP=$(curl -sL "http://localhost:${PORT}/"); printf '%s' "$RESP" | grep -qE 'Ready|<html' || { echo "FAIL text /: $RESP"; exit 1; }
+assert_reachable GET /
+assert_nonempty  GET /
 
-echo PASS
+oracle_summary

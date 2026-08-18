@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Behavioral test for simplegreeting — payload/shape assertions
-set -euo pipefail
-PORT="8080"
+# AUTO-GENERATED baseline behavioral oracle: dependency_injection/simplegreeting
+# Asserts each discovered endpoint is wired (no 404/5xx) and that GET
+# routes are reachable with a non-empty body. Replace with a richer
+# hand-written oracle under scaffold/oracles/ for deeper checks.
+source "${ORACLE_LIB:-$(dirname "$0")/oracle-lib.sh}"
 
-# html-/simplegreeting
-RESP=$(curl -sL "http://localhost:${PORT}/simplegreeting")
-printf '%s' "$RESP" | grep -qi 'Greetings' || { echo "FAIL: /simplegreeting missing marker: $RESP"; exit 1; }
-# html-/
-RESP=$(curl -sL "http://localhost:${PORT}/")
-printf '%s' "$RESP" | grep -qi 'Greetings' || { echo "FAIL: / missing marker: $RESP"; exit 1; }
+assert_reachable GET /simplegreeting
+assert_nonempty  GET /simplegreeting
+assert_reachable GET /
+assert_nonempty  GET /
 
-echo PASS
+oracle_summary

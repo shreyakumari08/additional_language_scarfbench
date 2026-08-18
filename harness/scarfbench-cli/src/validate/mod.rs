@@ -1,4 +1,4 @@
-mod types;
+pub(crate) mod types;
 
 use anyhow::{Context, anyhow};
 use clap::Args;
