@@ -15,10 +15,14 @@ each Harbor task is one `(app, source_framework -> target_framework)` migration.
 - **Languages**: Java 21 (Maven).
 - **Provenance**: paper `arXiv:2605.06754`, code at
   <https://github.com/scarfbench/benchmark>. License: see upstream.
-- **Task count in this adapter**: the adapter can generate **204 tasks** (34
-  apps × ordered framework pairs `n*(n-1)` present in each app). The subset
-  currently vendored under `harbor/datasets/scarfbench/` covers **6 tasks**
-  (the `spring -> quarkus` direction, one per app in three benchmark layers).
+- **Frameworks**: the three from the ScarfBench paper — **Spring**, **Quarkus**,
+  **Jakarta EE** — plus three added in this repo — **Micronaut**, **Helidon MP**,
+  **Vert.x** (6 total; all recognized by the `scarfbench-cli` harness too).
+- **Task count in this adapter**: the adapter generates one task per
+  `(app, source→target)` ordered framework pair present in each app —
+  `n*(n-1)` per app. With all 6 frameworks across 34 apps that is **1020**
+  tasks (the paper's Spring/Quarkus/Jakarta-only subset is **204**). No tasks
+  are vendored in this repo; generate them on demand (see below).
 - **Main adaptations vs. the original harness**:
   - Native build/run inside the task container (`mvn package` + `java -jar`)
     rather than the original Docker-in-Docker `make test`. See *Notes &

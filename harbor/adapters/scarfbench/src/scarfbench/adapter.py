@@ -36,7 +36,19 @@ logger = logging.getLogger(__name__)
 # lives under src/scarfbench/.
 TASK_TEMPLATE_DIR = Path(__file__).parent / "task-template"
 
-FRAMEWORKS = ("spring", "quarkus", "jakarta", "jakartaee")
+# Framework directory names recognized during task discovery. Includes the
+# three ScarfBench-paper frameworks (Spring / Quarkus / Jakarta EE) plus the
+# three added in this repo (Micronaut, Helidon MP, Vert.x). Every entry must
+# also be a valid `Framework` in the scarfbench-cli harness (validate/types.rs).
+FRAMEWORKS = (
+    "spring",
+    "quarkus",
+    "jakarta",
+    "jakartaee",
+    "micronaut",
+    "helidon",
+    "vertx",
+)
 
 # Files/dirs that make up ScarfBench's test harness. These are WITHHELD from
 # the agent's workspace (they encode how to build/deploy/test the app) and are
