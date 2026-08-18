@@ -127,19 +127,33 @@ benchmark applications are third-party open-source; their licenses live inside
 each app directory.
 
 
-## Harbor adapter (added)
+## Harbor framework + ScarfBench adapter (added)
 
-A **Harbor adapter** for ScarfBench is now included under
-[`harbor/adapters/scarfbench/`](./harbor/adapters/scarfbench/), alongside the
-original harness. It is additive — the original harness and language trees are
-unchanged, and **no ScarfBench task data is duplicated**.
+The **complete [Harbor](https://github.com/harbor-framework/harbor) framework**
+is now vendored under [`harbor/`](./harbor/), including the ScarfBench adapter at
+[`harbor/adapters/scarfbench/`](./harbor/adapters/scarfbench/). It is additive —
+the original ScarfBench harness and language trees are unchanged.
 
 - **Original ScarfBench harness** → language trees + [`harness/`](./harness/) (`scarfbench-cli`).
-- **Same tasks through Harbor** → the adapter in
-  [`harbor/adapters/scarfbench/`](./harbor/adapters/scarfbench/), which reads the
-  existing benchmark trees (`java/benchmark/`, `python/benchmark-py/`,
-  `rust/benchmark-rs/`, `typescript/benchmark-ts/`) and generates Harbor tasks on
-  demand — the task data stays in the original harness and is not copied.
+- **Run the same tasks through Harbor** → the full Harbor codebase in
+  [`harbor/`](./harbor/) plus the ScarfBench adapter in
+  [`harbor/adapters/scarfbench/`](./harbor/adapters/scarfbench/).
 
-A tasker can run the original harness, or run the same tasks through Harbor via
-the adapter. See [`harbor/README.md`](./harbor/README.md) to get started.
+**No ScarfBench task data is duplicated.** The `harbor/datasets/` task
+directories are intentionally omitted; the adapter reads the existing benchmark
+trees in this repo (`java/benchmark/`, `python/benchmark-py/`,
+`rust/benchmark-rs/`, `typescript/benchmark-ts/`) and generates Harbor tasks on
+demand.
+
+Getting started:
+
+```bash
+cd harbor
+uv sync                      # install the Harbor framework
+# generate + run a ScarfBench task through Harbor (see harbor/adapters/scarfbench/README.md)
+uv run scarfbench --list --scarfbench-root ../java/benchmark
+```
+
+`harbor/` is the upstream Harbor framework (see its own `harbor/README.md`,
+`harbor/LICENSE`); only run artifacts, virtualenvs, caches, and the ScarfBench
+task data have been excluded.
