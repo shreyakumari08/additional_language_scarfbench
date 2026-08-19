@@ -1,0 +1,7 @@
+[INFO] Starting Codex migration agent
+[INFO] Working directory: /Users/apple/Downloads/additional_language/eval-out/claude-code__persistence__roster__spring__quarkus/run_1/output
+[INFO] Migration: spring -> quarkus
+[INFO] Run ID: scarf_1787131837_18184
+[INFO] Container name: scarf_1787131837_18184_app
+[INFO] Image tag: scarf_1787131837_18184:latest
+[INFO] Cleaning up Docker resources for run: scarf_1787131837_18184

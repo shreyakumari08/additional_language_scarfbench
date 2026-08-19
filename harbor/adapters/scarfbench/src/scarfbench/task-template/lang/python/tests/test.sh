@@ -30,6 +30,14 @@ echo "=== ScarfBench Python verifier ==="
 [ -d "$APP_DIR" ] || fail_zero "app dir missing"
 [ -d "$HARNESS_DIR" ] || fail_zero "verifier dir missing"
 
+# H1: award 0 if any held-out grader file (smoke.py / smoke/ / verifier/) surfaces in agent workspace.
+_leaked="$(find "$APP_DIR" \( -name 'smoke.py' -o -name 'smoke' -o -name 'verifier' \) -print 2>/dev/null | head -20 || true)"
+if [ -n "$_leaked" ]; then
+    echo "H1_LEAK: held-out grader files present under $APP_DIR:" >&2
+    printf '  %s\n' $_leaked >&2
+    fail_zero "grader leaked into agent workspace (H1)"
+fi
+
 # 1. Install
 cd "$APP_DIR"
 echo "[INFO] pip install -r requirements.txt"

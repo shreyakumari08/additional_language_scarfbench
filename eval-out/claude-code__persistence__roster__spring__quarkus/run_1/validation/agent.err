@@ -1,0 +1,2 @@
+[INFO] claude agent: using native subscription login  log=/tmp/claude-agent.log
+failed to connect to the docker API at unix:///Users/apple/.docker/run/docker.sock; check if the path is correct and if the daemon is running: dial unix /Users/apple/.docker/run/docker.sock: connect: no such file or directory
