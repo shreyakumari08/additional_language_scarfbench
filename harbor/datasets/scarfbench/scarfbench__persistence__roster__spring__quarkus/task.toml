@@ -1,0 +1,80 @@
+# Refer to https://harborframework.com/docs/task-format for more details.
+# Values wrapped in {{...}} are filled in by adapter.py at generation time.
+
+schema_version = "1.0"
+
+# =============================================================================
+# Task Section
+# Task identity, authors, and keywords.
+# =============================================================================
+[task]
+name = "ibm/scarfbench__persistence__roster__spring__quarkus"
+authors = [
+    { name = "Kshitij", email = "kshitijkc28@gmail.com" },
+]
+keywords = [
+    "framework-migration",
+    "scarfbench",
+    "java",
+    "spring",
+    "quarkus",
+    "spring-to-quarkus",
+    "roster",
+]
+
+# =============================================================================
+# Metadata
+# =============================================================================
+[metadata]
+# Difficulty inferred from application size ("medium" / "hard").
+difficulty = "hard"
+
+category = "framework-migration"
+
+tags = ["scarfbench", "java", "framework-migration", "spring-to-quarkus", "roster"]
+
+# ScarfBench-native identifiers, kept for traceability back to the source task.
+source_id = "persistence__roster__spring__quarkus"
+app = "roster"
+source_framework = "spring"
+target_framework = "quarkus"
+
+# Provenance of the application source cloned inside the task image.
+# The task Dockerfile pulls from source_repo at build time; source_commit
+# documents the intended snapshot. The clone itself pulls HEAD -- the commit
+# reference is documentation, not enforcement.
+source_repo = "https://github.com/Ethara-Ai/scarfbench-dataset.git"
+source_commit = "d332316acbec6e26e601050c298e87ca77af7f48  (all 26 apps / 58 framework dirs, junk-free)"
+
+# =============================================================================
+# Verifier
+# The verifier assembles the migrated app + held-out target harness, builds and
+# boots it natively for the task's language (java), then runs the
+# target's pytest smoke suite. Builds can take time, hence the long timeout.
+# =============================================================================
+[verifier]
+network_mode = "public"
+timeout_sec = 1800.0
+
+# =============================================================================
+# Agent
+# =============================================================================
+[agent]
+network_mode = "public"
+timeout_sec = 3600.0
+
+# =============================================================================
+# Environment
+# The Dockerfile clones the scarfbench-dataset mirror at build time and
+# stages /workspace/app (source), /verifier (held-out grader), and /reference
+# (oracle-only full target app) inside the image.
+# =============================================================================
+[environment]
+# The first build installs the Java toolchain + Python (for the
+# smoke grader) + clones the mirror repo. Slow on a cold cache / slow network.
+# Generous timeout; the image is cached after.
+build_timeout_sec = 2700.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 20480
+gpus = 0
